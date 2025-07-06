@@ -1,0 +1,4 @@
+string symbol
+int32 timestamp
+---
+float32 liquidity

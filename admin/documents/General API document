@@ -1,0 +1,193 @@
+Algorithm general Internal API Document( For team one and team two):
+Option:
+
+get_historical_stock_price(string symbol, datetime begin, datetime end, string price_type): list[float]
+get historical stock prices from ‘begin’ to ‘end’.
+symbol: The upper letter symbol as in stock market.
+begin: The start date of data request. If the start date is before the Initial Public Offering (IPO) date of the stock, get the data starting from the IPO.
+end: The end date of data request. Restrict the end date not beyond the mostly updated historical date by the system. If `end` is not given, return the one-day data of `start`.
+price_type: Default=”adjusted_closed_price”, can be “closed”, “open” and “adjusted_closed_price”
+
+get_current_price(string symbol, string price_type, datetime timestamp): float
+get the current stock price.
+symbol (str): The upper letter symbol as in the stock market.
+price_type (str): The type of price to retrieve. Default is "adjusted_closed_price". Other options are "closed", "open", and "adjusted_closed_price".
+timestamp (datetime): The specific date and time to retrieve the stock price.
+float: The stock price at the given timestamp.
+process：Check if symbol is provided. Verify that price_type is an allowed value. Make sure the timestamp parameter is provided. Format timestamp into a string to match the date format in the data structure. Find the corresponding stock symbol and date from an internal data structure. Extract the required type of price from the data for the corresponding date.Returns the extracted price data.
+
+
+get_dividend_paid(string symbol, datetime begin, datetime end): list[float]
+get a dividend paid from ‘begin’ to ‘end’.
+symbol (str): The upper letter symbol as in the stock market.
+begin (datetime): The start date of data request. If the start date is before the Initial Public Offering (IPO) date of the stock, get the data starting from the IPO.
+end (datetime): The end date of data request. Restrict the end date not beyond the mostly updated historical date by the system.
+list[float]: A list of dividends paid between the begin and end dates.
+process：Iterates through all dates within a specified time range and extracts dividend data. Returns a list of all dividends paid during the specified time range.
+
+
+get_riskfree_rate(string symbol, datetime timestamp): float
+get us treasury bills rate (10 years)
+symbol (str): The upper letter symbol as in the stock market.
+timestamp (datetime): The specific date and time to retrieve the risk-free rate.
+float: The risk-free rate at the given timestamp.
+process: The risk free rate is extracted from the data for the corresponding date.
+
+get_option_price(string symbol, datetime timestamp): map(strike price: float, option premium: float)
+get option strike price and option premium
+symbol (str): The upper letter symbol as in the stock market.
+timestamp (datetime): The specific date and time to retrieve the option prices.
+dict: A dictionary where the keys are strike prices and the values are option premiums.
+process: Format timestamp into a string to match the date format in the data structure. Find the corresponding stock symbol and date from an internal data structure. Extract option price data from the data on the corresponding date, including exercise price and option premium.
+Option strategy examples: 
+Now:
+Short Straddle : The short straddle strategy is based on the investor's expectation that the market will remain stable, allowing them to profit from selling both call and put options when price fluctuations are minimal. The maximum profit is the premium received, while the maximum loss is theoretically unlimited. The specific steps are as follows: First, use the get_historical_stock_price API to analyze the stock's historical price data and determine its volatility. Next, use the get_current_price and get_option_price APIs to obtain the current market price and option premiums to select the appropriate strike price. Then, use the get_dividend_paid and get_riskfree_rate APIs to acquire dividend and risk-free rate data for option pricing and risk assessment. Finally, based on this analysis, sell a call option and a put option with the same strike price and expiration date to construct the short straddle strategy. 
+Naked Call (Put): As the development team, we provide a suite of APIs that help investors gain comprehensive insights into historical stock prices, current market prices, option premiums, dividend payments, and risk-free rates, enabling them to construct and implement a naked call strategy. The naked call strategy involves selling a call option without owning the underlying stock, based on the investor's expectation that the stock price will not rise significantly. The maximum profit is the premium received, while the maximum loss is theoretically unlimited if the stock price rises sharply. 
+Maybe Future:
+We will use long call/put and short call/put to form more and more effective strategies in the future. Below are just some possible examples.
+This approach predicts high volatility. One common strategy that could benefit from this API is the Straddle(long). A straddle involves buying both a call and a put option for the same stock with the same strike price and expiration date. Traders use this strategy when they expect significant price movement but are unsure of the direction. Historical price data helps in determining the volatility of the stock, which is a key factor in the profitability of a straddle.
+This method predicts less volatility. Another strategy is the Iron Condor, which involves selling one call and one put at higher and lower strike prices while buying another call and put at even higher and lower strike prices, respectively. This strategy profits from low volatility, and historical stock prices can help traders identify periods of stability to implement this strategy effectively.
+This approach is more conservative and favors less volatility. Additionally, Covered Call Writing can benefit from this API. This strategy involves holding a long position in a stock while selling a call option on the same stock. Historical price data is essential to determine the optimal strike price and expiration date for the call options to maximize returns while minimizing risk.
+
+
+
+
+
+
+Fundamental analysis:
+
+6.  get_current_asset（string symbol, string year) : float
+
+API Endpoint: Defined as a GET request with the path /get_current_asset from balance sheet. There is no need to be so troublesome in passing parameters within the system, it is just expressed in the form of web API.
+
+Request Parameters:
+symbol: The company code, e.g., "AAPL" for Apple Inc.
+year: The year of the financial statement, e.g., "2023".
+Request Example: Includes query parameters in the request path, e.g., /get_current_asset?symbol=AAPL&year=2023.
+Success Response: Returns a JSON object containing the current assets data if the request is successful.
+Error Responses: Includes responses for missing parameters, and not found financial statement or current assets data.
+Web request example:
+
+from flask import Flask, request, jsonify
+app = Flask(__name__)
+# Example internal data structure provided by another team
+financial_data = {
+    "AAPL": {
+        "2023": {
+            "balance_sheet": {
+                "current_assets": 150000000
+            }
+        }
+    },
+    # Additional data for other companies and years can be added here
+}
+
+@app.route('/get_current_asset', methods=['GET'])
+def get_current_asset():
+    symbol = request.args.get('symbol')
+    year = request.args.get('year')
+    
+    if not symbol or not year:
+        return jsonify({"error": "Missing symbol or year parameter"}), 400
+    
+    company_data = financial_data.get(symbol)
+    if company_data:
+        year_data = company_data.get(year)
+        if year_data:
+            current_assets = year_data.get('balance_sheet', {}).get('current_assets')
+            if current_assets is not None:
+                return jsonify({"current_assets": current_assets})
+            else:
+                return jsonify({"error": "Current assets not found in the financial statement"}), 404
+        else:
+            return jsonify({"error": "Financial statement not found"}), 404
+    else:
+        return jsonify({"error": "Financial statement not found"}), 404
+if __name__ == '__main__':
+    app.run(debug=True)
+
+7. get_current_liabilities (string symbol, string year): float
+
+API endpoint: /get_current_liabilities is defined as a GET request. The date is from balance_sheet.
+
+Request parameters:
+symbol: company code, for example "AAPL" means Apple.
+year: The year of the financial statement, such as "2023".
+Request example: The request path contains query parameters, such as /get_current_liabilities?symbol=AAPL&year=2023.
+Success response: If the request is successful, a JSON object containing current liability data is returned.
+Error responses: Includes error responses when parameters are missing, financial statement or current liability data not found.
+8. get_dividends(string symbol, string year):float 
+"AAPL": {
+        "2023": {
+            "balance_sheet": {
+                "current_assets": 150000000,
+                "current_liabilities": 100000000
+            },
+            "dividends": 50000000
+        }
+API endpoint: /get_dividends is defined as a GET request.
+Request parameters:
+symbol: company code, for example "AAPL" means Apple.
+year: The year of the financial statement, such as "2023".
+Request example: The request path contains query parameters, such as /get_dividends?symbol=AAPL&year=2023.
+Success response: If the request is successful, a JSON object containing the dividend data is returned.
+Error responses: Includes error responses when parameters are missing, financial statement or dividend data not found.
+
+9. get_eps(string symbol, string year): float
+"AAPL": {
+        "2023": {
+            "balance_sheet": {
+                "current_assets": 150000000,
+                "current_liabilities": 100000000
+            },
+            "dividends": 50000000,
+            "eps": 3.28
+        }
+API endpoint: /get_eps is defined as a GET request.
+Request parameters:
+symbol: company code, for example "AAPL" means Apple.
+year: The year of the financial statement, such as "2023".
+Request example: The request path contains query parameters, such as /get_eps?symbol=AAPL&year=2023.
+Success response: If the request is successful, a JSON object containing earnings per share (EPS) data is returned.
+Error responses: Includes error responses when parameters are missing, financial statements or earnings per share (EPS) data not found.
+
+10. get_roe(string symbol, string year): float
+
+API endpoint: /get_roe is defined as a GET request. The same applies to Diluted ROE and Diluted ROE after Non-recurring P&L.
+Request parameters:
+symbol: company code, for example "AAPL" means Apple.
+year: The year of the financial statement, such as "2023".
+Request example: The request path contains query parameters, such as /get_roe?symbol=AAPL&year=2023.
+Success response: If the request is successful, a JSON object containing return on equity (ROE) data is returned.
+Error responses: Includes error responses when parameters are missing, financial statements or return on equity (ROE) data not found.
+
+More:
+GET /get_gross_profit_margin: Get gross profit margin (Gross Profit Margin).
+GET /get_net_profit_margin: Get the net profit margin (Net Profit Margin).
+GET /get_ebit_margin: Get the EBIT Margin.
+GET /get_ebitda_margin: Get the profit margin before interest, taxes, depreciation, and amortization (EBITDA Margin).
+GET /get_asset_liability_ratio: Get the asset-liability Ratio.
+GET /get_asset_turnover: Get the asset turnover rate (Asset Turnover).
+Request by the same symbol and year.
+
+11. get_OCFPS(string symbol, datetime timestamp): float
+symbol (str): The upper letter symbol as in the stock market.
+timestamp (datetime): The specific date and time to retrieve the operating cash flow per share.
+float: The operating cash flow per share at the given timestamp.
+process: First, make sure the stock symbol and timestamp are provided. The timestamp is then formatted into a string format to match the internal data structure. Next, look up the corresponding stock symbol from the internal data structure. If the corresponding stock symbol is found, further search for data on the corresponding date. If data is found for that date, the operating cash flow per share is returned, otherwise an error is thrown.
+13. get_PE(string symbol, datetime timestamp): float
+symbol (str): The upper letter symbol as in the stock market.
+timestamp (datetime): The specific date and time to retrieve the P/E ratio.
+float: The P/E ratio at the given timestamp.
+process: First, make sure the stock symbol and timestamp are provided. The timestamp is then formatted into a string format to match the internal data structure. Next, look up the corresponding stock symbol from the internal data structure. If the corresponding stock symbol is found, further search for data on the corresponding date. If data for that date is found, the P/E Ratio is returned, otherwise an error is thrown.
+The same goes for P/B Ratio.
+Fundamental analysis examples：
+Now:
+Our research team is currently focusing on analyzing the linear relationship between the Price-to-Earnings (PE) Ratio and the Price-to-Book (PB) Ratio. We have gathered extensive financial data from numerous companies and are utilizing linear regression models to explore the potential relationship between these two key financial indicators. Additionally, we are employing k-means clustering algorithms to group the data, aiming to identify clusters of companies with similar PE and PB characteristics. Concurrently, we are using Principal Component Analysis (PCA) for dimensionality reduction to extract the main features from the data and simplify the analysis process. Preliminary results indicate that there is a certain linear relationship between PE and PB Ratios, distinct characteristics in different company clusters identified by k-means, and PCA has helped us identify several significant principal components.
+
+Two possible strategies for the future:
+Multivariate Regression and Advanced Regression Models Strategy:
+Building on our initial findings of the linear relationship, we plan to further employ multivariate regression and advanced models such as ridge regression. By incorporating additional financial indicators (e.g., ROE, earnings growth rate) and macroeconomic variables, we aim to more accurately describe the relationship between PE and PB Ratios. Optimizing these models will enhance our ability to predict future market performance of companies, which can be applied to our investment decision-making process.
+Portfolio Investment Strategy Based on Clustering Results:
+Utilizing the characteristics of company clusters identified through k-means clustering, we intend to develop a portfolio investment strategy. Specifically, we will select companies with superior financial 
+

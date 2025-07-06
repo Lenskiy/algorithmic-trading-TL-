@@ -1,0 +1,5 @@
+string bt_type
+string bt_params_json
+---
+bool done
+string reason

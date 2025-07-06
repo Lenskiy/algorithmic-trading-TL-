@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>data_storaging</name>
+  <version>0.0.0</version>
+  <description>TODO: Package description</description>
+  <maintainer email="u7541840@gmail.com">harrison</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+  <depend>system_interface</depend>
+
+  <!-- Add service dependencies -->
+  <build_depend>rosidl_default_generators</build_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <build_export_depend>rosidl_default_generators</build_export_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+
+  <!-- Include polygon interfaces if defined in a separate package -->
+  <depend>polygon_interfaces</depend>
+
+  <!-- Declare that this package is part of rosidl_interface_packages -->
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

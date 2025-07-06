@@ -1,0 +1,7 @@
+string[] symbols
+int32 start_date
+int32 end_date
+---
+float32[] correlations
+
+# assume daily data

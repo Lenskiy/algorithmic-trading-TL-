@@ -1,0 +1,270 @@
+                                                  Function API document
+
+Backtesting Process:
+
+Overview
+
+The backtesting framework allows users to:
+
+●Define and execute trading strategies.
+●Simulate market conditions and agent interactions.
+●Retrieve historical price data for stocks.
+●Calculate option premiums using the Black-Scholes-Merton (BSM) model.
+●Analyse performance metrics such as profits, drawdowns, and compound annual growth rate (CAGR).
+
+Agent
+Agent is responsible for executing trading strategies and recording transactions.
+Attributes:
+_strategies: Dictionary mapping StrategyId to Strategy instances.
+_transactions: Dictionary mapping StrategyId to Transactions.
+Methods:
+__init__(strategies: dict[StrategyId, Strategy]): Initialises an agent with specified strategies.
+get_symbols() -> Set[Symbol]: Retrieves the set of symbols involved in the agent's strategies.
+update(symbol: Symbol, new_data, time: datetime): Updates the strategy based on new market data and records transactions.
+transactions() -> dict[StrategyId, Transactions]: Returns the transactions recorded by the agent.
+need_update(date: datetime) -> bool: Determines whether the agent's strategies require an update based on the provided date.
+Backtester
+Abstract base class for implementing backtesting logic.
+Attributes:
+_start_date, _end_date: Define the period for backtesting.
+_self_agent, _agents: Agents participating in the backtest.
+_profits, _drawdowns, _cagr: Performance metrics.
+Methods:
+run_back_testing(): Method to be implemented by subclasses, orchestrating the backtesting process.
+transactions(strategy_id: StrategyId): Retrieves transactions for a specific strategy.
+get_profits(), get_drawdowns(), get_cagr(): Retrieve calculated performance metrics.
+SimulatedMarket
+Simulates market operations such as submitting orders.
+Static Methods:
+submit_order(order: Order): Processes and accepts an order.
+Data Structure:
+
+
+Primitive Data Types ( float):
+Used for handling price and financial calculations. For example, in the option pricing model (bsm_pricing), stock prices, option strike prices, and calculated premiums might all use the float type to ensure precision.
+Dictionary (dict):
+Dictionaries are extensively used in your code to map key-value pairs, which is very effective for fast access and management of related data. For example:
+In the Agent class, the _strategies and _transactions attributes use dictionaries to store instances of strategies and their corresponding transactions, with StrategyId as the key.
+The Backtester class uses dictionaries to store the profits (_profits) and drawdowns (_drawdowns) of each strategy.
+The _simulate_premiums method in the DailyMarketReplay uses a dictionary to store and return the premiums corresponding to each option strike price.
+Set:
+The Agent class uses sets to manage and return all the stock symbols (Symbol) involved in the strategies, which helps avoid processing the same stock symbol multiple times and optimises performance.
+Performance Analysis
+Performance metrics like profits, drawdown, and _cagr are calculated post-simulation to assess strategy effectiveness over time.
+
+Order Processing
+
+Classes and methods
+1. Order
+Description:
+The Order class represents a financial transaction order, encapsulating all details about the asset being traded, the quantity of the asset, and the pricing information.
+Attributes:
+asset (FinancialAsset): The financial asset involved in the transaction.
+quantity (float): The quantity of the asset to be traded.
+ask (float): The asking price per unit of the asset.
+bid (float): The bidding price per unit of the asset.
+is_ask (bool): A flag indicating whether the transaction is an ask order (True if ask > 0).
+Methods:
+__init__(self, asset: FinancialAsset, quantity=1.0, ask=0.0, bid=0.0): Initialises a new Order instance.
+is_complete(self) -> bool: Checks if the order transaction has completed.
+is_successful(self) -> bool: Checks if the completed order transaction was successful.
+accept_order(self): Marks the order as completed successfully.
+reject_order(self): Marks the order as completed but unsuccessful.
+symbol(self) -> str: Returns the symbol of the asset involved in the order.
+2. OrderTask
+Description:
+A supporting class that handles the state of an Order object, tracking whether it is pending, completed, and if completed, whether it was successful.
+Attributes:
+_pending (bool): Status indicating if the task is still pending.
+_is_successful (bool): Status indicating the success of the task upon completion.
+_msg (str): Message providing details about the task or any errors.
+Methods:
+__init__(self, pending=True, is_successful=True, msg=""): Initialises a new OrderTask instance.
+add_msg(self, msg: str): Adds a message to the task.
+get_msg(self) -> str: Retrieves the current message associated with the task.
+is_successful(self) -> bool: Returns True if the task is not pending and was successful.
+complete(self, result=True): Completes the task, optionally setting it as successful or unsuccessful based on the result flag.
+is_complete(self) -> bool: Returns True if the task is no longer pending.
+3. SimulatedMarket
+Description:
+A static class that simulates market operations for submitting orders.
+Methods:
+submit_order(order: Order): Submits an Order, automatically accepting it.
+Data Structures
+FinancialAsset
+The FinancialAsset class is referenced in the code. symbol() method that returns the trading symbol of the asset.
+
+
+
+Example Usage
+asset = FinancialAsset(symbol="AAPL")
+order = Order(asset=asset, quantity=100, ask=150.0)
+SimulatedMarket.submit_order(order)
+print("Order Completed:", order.is_complete())
+print("Order Successful:", order.is_successful())
+print("Asset Symbol:", order.symbol())
+
+Risk Indicators
+
+Portfolio
+Classes and Methods
+1. PortfolioWeight
+Description:
+The PortfolioWeight class provides methods to calculate the optimal weights of assets in a portfolio based on the selected optimization method.
+Constructor:
+__init__(self, method: str): Initialises a new instance of PortfolioWeight with the specified optimization method.
+Parameters:
+method (str): The optimization method to be used. Supported values are 'markowitz' and 'hierarchical risk parity'.
+Methods:
+calculate_weights(self, returns: pd.DataFrame, risk_free_rate: float) -> dict: Determines the optimal portfolio weights by applying the specified optimization method.
+returns (pd.DataFrame): A DataFrame where each column represents a stock, and each row represents a date, containing return values of the respective stocks.
+risk_free_rate (float): The risk-free rate to be used in the optimization process.
+markowitz_weights(self, returns: pd.DataFrame) -> dict: Calculates portfolio weights using the Markowitz Mean-Variance Optimization technique.
+returns (pd.DataFrame): The returns data as described.
+hrp_weights(self, returns: pd.DataFrame, risk_free_rate: float) -> dict: Calculates portfolio weights using the Hierarchical Risk Parity model.
+returns (pd.DataFrame): The returns data as described.
+risk_free_rate (float): The risk-free rate as described.
+Exceptions:
+Raises ValueError: If an unsupported method is specified.
+2. StrategySelection
+Description:
+The StrategySelection class is designed to allow dynamic strategy selection for trading or investment. This class is currently a placeholder for future functionality.
+Methods:
+select_strategy(self): Placeholder method for future implementation where users can select different investment strategies, strike prices, or expiration dates.
+Data Structures
+pd.DataFrame
+The portfolio optimization methods use Pandas DataFrames as inputs for the returned data. Each column in the DataFrame should represent a different stock, and each row should represent returns for a given date.
+Output Data Format
+The output from the optimization methods (markowitz_weights and hrp_weights) is a dictionary where the keys are stock names and the values are the corresponding weights in the portfolio.
+Example Usage
+import pandas as pd
+
+# Sample data
+data = {
+    'AAPL': [0.1, 0.2, 0.15],
+    'GOOGL': [0.1, 0.15, 0.2],
+    'MSFT': [0.2, 0.1, 0.15]
+}
+returns = pd.DataFrame(data)
+
+# Create a PortfolioWeight instance with 'markowitz' method
+portfolio = PortfolioWeight('markowitz')
+
+# Calculate weights
+risk_free_rate = 0.02  # Example risk-free rate
+weights = portfolio.calculate_weights(returns, risk_free_rate)
+
+print(weights)
+
+
+Arima model
+Functions
+main()
+Description:
+Executes the ARIMA model analysis on Apple Inc.'s adjusted closing stock prices post-2020. The function reads data, prepares it, and divides it into training and testing datasets. It then fits the ARIMA model to the training data, forecasts future values, and visualises the results.
+Process:
+Read Data: The function reads the S&P 500 adjusted close prices from a CSV file.
+Prepare Data: Filters and prepares data focusing on Apple Inc.'s stock prices after January 1, 2020.
+Train-Test Split: Splits the data into 80% training and 20% testing sets.
+Model Fitting: Fits the ARIMA model to the training data.
+Forecasting: Forecasts stock prices using the model and visualises both fitted and forecasted values.
+Input:
+No direct inputs are taken; all data and parameters are hardcoded within the function.
+Output:
+Visual output using matplotlib to show the actual prices, fitted data, and forecasts along with confidence intervals.
+Data Structures:
+Pandas DataFrame: Used to store and manipulate the stock price data.
+Numpy Array: Used for numerical operations, especially in the context of forecasting.
+Dependencies:
+statsmodels: Provides the ARIMA model functionality.
+matplotlib: Used for plotting data and results.
+src.util.read_file: A utility function used to read the data file.
+Risk measurement
+Functions
+simulate_portfolio(stock_list: [Stock], time_period, num_steps)
+Description:
+Simulates portfolio values over time using a geometric Brownian motion model with correlated assets.
+Parameters:
+stock_list ([Stock]): List of Stock objects to be included in the simulation.
+time_period (float): Total time period of the simulation in the same units as time_steps.
+num_steps (int): Number of discrete steps in the simulation.
+Returns:
+Numpy Array: Matrix of simulated portfolio values where rows represent assets and columns represent time steps.
+covariance_matrix(stock_list: [Stock])
+Description:
+Calculates the covariance matrix of the returns of the stocks provided.
+Parameters:
+stock_list ([Stock]): List of Stock objects for which the covariance matrix is to be calculated.
+Returns:
+Numpy Array: Covariance matrix of the returns of the given stocks.
+Data Structures
+Stock
+A custom class representing individual stocks, expected to have the following attributes:
+historical_price (list of price data)
+volatility (float, representing the stock's volatility)
+calculate_expected_return() (method returning the expected return of the stock)
+Option
+A custom class representing financial options related to the stocks, with methods for calculating various payoffs and risks.
+Example Usage
+# Assume necessary imports and Stock class definition have been done
+stock_list = [Stock(...), Stock(...)]
+portfolio_values = simulate_portfolio(stock_list, 1.0, 100)
+
+Trading Strategies
+
+Event Handler
+
+1. ExpirationHandler
+The ‘ExpirationHandler’ class is designed to manage the expiration of options within a trading strategy. It utilises information from both the OptionStrategy and the current stock Price to determine the necessary actions as an option approaches or reaches expiration.
+
+Constructor
+Parameters:
+‘strategy’ (‘OptionStrategy’): An instance of ‘OptionStrategy’ which provides the specific options strategy being managed.
+‘stock_price’ (‘Price’): Current price data of the underlying stock.
+
+Methods
+‘assess_option()’
+Description: Determines if the option is in-the-money (ITM), out-the-money (OTM), or deep out-the-money (deep OTM) at the time of expiration. Specific implementation should be defined to perform this assessment based on strategy and stock price.
+
+‘adjust_option()’
+Description: Implements rules for managing the option at expiration. This could involve rolling over the option, closing it, or any other predefined strategy-specific actions.
+
+2. MarginHandler
+
+The ‘MarginHandler’ class serves as a base class for calculating margin requirements for various options trading strategies. It provides foundational methods that can be extended by specific types of trading (e.g., equity or index options).
+
+Constructor
+Parameters:
+‘margin_para1 (float)’: Multiplier used for calculating the first type of margin requirement.
+‘margin_para2 (float)’: Multiplier used for calculating the second type of margin requirement.
+
+Methods
+‘calculate_margin()’
+Description: Abstract method for calculating total margin requirements based on the trading strategy.
+
+‘_margin1(underlying_value, otm_amount, premium)’
+Description: Calculates the first type of margin requirement based on underlying value, amount out-the-money, and the premium.
+Parameters:
+‘underlying_value (float)’: The market value of the underlying asset.
+‘otm_amount (float)’: The amount by which the option is out-the-money.
+‘premium (float)’: The premium of the option.
+
+Returns: float representing the calculated margin.
+‘_margin2(contract_value, premium)’
+Description: Calculates the second type of margin requirement based on contract value and the premium.
+Parameters:
+‘contract_value (float)’: The total value of the contract.
+‘premium (float)’: The premium of the option.
+Returns: float representing the calculated margin.
+
+3. EquityMarginHandler
+A subclass of ‘MarginHandler’ tailored for equity options trading. It sets specific parameters for margin calculations suitable for equities.
+
+Constructor
+Inherits from ‘MarginHandler’ with predefined margin parameters suitable for equity options (margin_para1=0.2, margin_para2=0.1).
+
+4. IndexMarginHandler
+A subclass of ‘MarginHandler’ tailored for index options trading. It sets specific parameters for margin calculations suitable for indices.
+
+Constructor
+Inherits from ‘MarginHandler’ with predefined margin parameters suitable for index options (margin_para1=0.15, margin_para2=0.1).

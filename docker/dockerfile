@@ -1,0 +1,47 @@
+# using Ubuntu 22.04 as base image
+FROM ubuntu:22.04
+
+# Set environment variables to avoid being prompted for input during installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /root/trading
+
+# Copy the install scripts into the container
+RUN mkdir -p temp
+
+# Run the install scripts
+COPY script/base-tool.sh temp/
+RUN /bin/bash temp/base-tool.sh
+
+COPY script/zsh.sh temp/
+RUN /bin/bash temp/zsh.sh
+
+COPY script/ros2.sh temp/
+RUN /bin/bash temp/ros2.sh
+
+COPY script/arrow.sh temp/
+RUN /bin/bash temp/arrow.sh
+
+COPY script/ccapi.sh temp/
+RUN /bin/bash temp/ccapi.sh
+
+COPY script/boost.sh temp/
+RUN /bin/bash temp/boost.sh
+
+COPY script/hffix.sh temp/
+RUN /bin/bash temp/hffix.sh
+
+COPY script/rapidjson.sh temp/
+RUN /bin/bash temp/rapidjson.sh
+
+COPY script/env.sh temp/
+RUN /bin/bash temp/env.sh
+
+COPY script/websocket.sh temp/
+RUN /bin/bash temp/websocket.sh
+
+COPY script/tmux.sh temp/
+RUN /bin/bash temp/tmux.sh
+
+# Delete the temp folder
+RUN rm -rf temp

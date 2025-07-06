@@ -1,0 +1,7 @@
+string symbol
+string exchange
+int64 start_time
+int64 end_time
+string frequency
+---
+Price[] prices

@@ -1,0 +1,9 @@
+int64 time
+string frequency
+string symbol
+string exchange
+float32 open
+float32 close
+float32 high
+float32 low
+float32 volume

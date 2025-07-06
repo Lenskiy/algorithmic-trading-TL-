@@ -1,0 +1,10 @@
+string symbol
+string exchange
+float32 price
+float32 size
+bool side
+int32 time
+---
+float32 value_at_risk
+float32 liquidity
+float32 max_correlation

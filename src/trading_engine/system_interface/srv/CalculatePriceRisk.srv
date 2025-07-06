@@ -1,0 +1,12 @@
+string symbol
+int32 start_time
+int32 end_time
+int32 MINUTE=0 
+int32 TEN_MINUTE=1
+int32 HOUR=2
+int32 DAY=3
+int32 timestamp
+---
+float32 value_at_risk
+
+# assume same adjusted prices over different exchanges.

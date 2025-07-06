@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  ros2_trading:
+    image: nightcatstar/ros2_iron_env:v0.1.0
+    # build:
+    #   context: ./docker
+    #   dockerfile: dockerfile
+    container_name: ros2_trading_container
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/root/trading
+    command: /bin/bash -c "echo 'ubuntu started!' && bash" 
+    env_file:
+      - .env

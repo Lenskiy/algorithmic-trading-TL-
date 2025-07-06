@@ -1,0 +1,6 @@
+string agent_type
+string input_topic
+string output_topic
+---
+string agent_id
+bool done

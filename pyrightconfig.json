@@ -1,0 +1,14 @@
+{
+  "extraPaths": [
+    "install/system_interface/lib/python3.10/site-packages"
+    // "install/backtesting/lib/python3.10/site-packages"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/.git",
+    "**/__pycache__",
+    "build",
+    "install",
+    "log"
+  ]
+}
